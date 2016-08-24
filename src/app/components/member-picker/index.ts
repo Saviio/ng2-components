@@ -27,15 +27,13 @@ export class MemberPickerComponent {
     return findIndex(this.selected, i => i === item) > -1
   }
 
-  //先click 再使用键盘切换时 menu会闪烁的bug => 因为内部的ul获得focus，所以之后的 上|下 都是 ul在响应键盘事件
-  //如何处理disable?
+
 
   toggle(item){
     const index = findIndex(this.selected, i => i === item)
     if(index === -1){
       this.selected.push(item)
       this.onSelect.emit(item)
-      //this.input.nativeElement.focus()
     } else {
       let removedItem = this.selected.splice(index, 1)
       this.onRemove.emit(removedItem)
