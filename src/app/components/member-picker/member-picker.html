@@ -1,0 +1,24 @@
+<div class="member-picker-view">
+  <div class="member-picker-input">
+    <input 
+      [placeholder] = "'查找成员'"
+      name='member-picker'
+      autofocus
+      autocomplete="off"
+      #input
+    />
+  </div>
+  <tb-menu-list
+    [items]="items" 
+    [inputElem]="input" 
+    [predicate]="filter" 
+    [highlight]="activeClass"
+    (enter)="onEnter($event)"
+  >
+    <template let-item="$implicit" let-i="index">
+        <li class="option" (click)="toggle(item)" [class.selected]="isSelected(item)">
+            <a>{{item?.name}}</a>
+        </li>
+    </template>
+  </tb-menu-list>
+</div>
