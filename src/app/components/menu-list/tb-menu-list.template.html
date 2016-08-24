@@ -1,0 +1,9 @@
+<ul scroll [highlight]="highlight" #ul>
+  <template
+    ngFor
+    [ngForOf]="state$ | async"
+    [ngForTemplate]="template"
+    let-i="index"
+    [ngForTrackBy]="i">
+  </template>
+</ul>

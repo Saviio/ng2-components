@@ -5,6 +5,10 @@ const siblings = function(el): any[] {
     let ret = []
     let target = el
     el = el.parentNode.firstChild
+    if(!el) {
+      return ret
+    }
+
     do { 
       if(el && el !== target && el.nodeType === 1){
         ret.push(el)
@@ -53,8 +57,6 @@ export class ScrollDirective {
       siblings(child).forEach(item => item.classList.remove(this.highlight))
     }
 
-    console.log(document.activeElement)
-
     this.scrollTo(this.el, to, 200)
   }
 
@@ -77,5 +79,4 @@ export class ScrollDirective {
     let css = window.getComputedStyle(this.el)
     return css.maxHeight && css.overflowY === 'auto'
   }
-
 }

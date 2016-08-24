@@ -10,10 +10,12 @@ import {
   EventEmitter,
   SimpleChange
 } from '@angular/core'
-import { ScrollDirective } from '../../directives/scroll'
-import { Observable }    from 'rxjs/Observable'
-import { Subject }    from 'rxjs/Subject'
+
 import { findIndex } from 'lodash'
+import { Subject } from 'rxjs/Subject'
+import { Observable } from 'rxjs/Observable'
+import { ScrollDirective } from '../../directives/scroll'
+
 
 import 'rxjs/add/observable/fromEvent'
 import 'rxjs/add/operator/do'
@@ -41,20 +43,10 @@ enum Action {
 const reCharacter = /^$|^([a-zA-Z0-9\u4e00-\u9fa5_ -]+)$/
 
 @Component({
-    selector: 'tb-menu-list',
-    template: `
-      <ul scroll [highlight]="highlight" #ul>
-        <template
-          ngFor
-          [ngForOf]="state$ | async"
-          [ngForTemplate]="template"
-          let-i="index"
-          [ngForTrackBy]="i">
-        </template>
-      </ul>
-    `,
-    directives: [ScrollDirective],
-    styleUrls:['./menu-list.css']
+  selector: 'tb-menu-list',
+  styleUrls: [ './tb-menu-list.css' ],
+  templateUrl: './tb-menu-list.template.html',
+  directives: [ ScrollDirective ]
 })
 export class MenuListComponent implements OnInit {
 
@@ -112,8 +104,6 @@ export class MenuListComponent implements OnInit {
         })
         .subscribe()
 
-
-
       /*console.log(this.ul.nativeElement)
       Observable.fromEvent(this.ul.nativeElement.firstChild, 'keyup')
         .do((event: KeyboardEvent) => {
@@ -140,46 +130,39 @@ export class MenuListComponent implements OnInit {
         .refCount()
 
       /*
-      console.log(this.initialQuery)
-
-      if(this.initialQuery !== undefined){
-        this.action$.next({ type:Action.Filter, payload: this.initialQuery }) // not worked
-      }
-      */
-
-
-      /*
         options state ::=
               高亮状态 这个用Scroll Directive 通过DOM操作来完成？
               鼠标悬浮 (由外部控制）
               选中状态 (由外部控制)
-
-        考虑下没有Input的case？
       */
+
+      if(this.initialQuery !== undefined){
+        setTimeout(() => 
+          this.action$.next({ type:Action.Filter, payload: this.initialQuery })
+        , 0)
+      }
   }
 
-  ngOnDestory(){
+  ngOnDestory() {
     this.keyboardSubscription.unsubscribe()
     this.inputSubscription.unsubscribe()
   }
 
-  ngOnChanges(changes: {[propName: string]: SimpleChange}){
-    for (let prop in changes) {
-      if(prop === 'items'){
-        this.action$.next({ type: Action.Reset, payload: changes[prop].currentValue })
-      }
+  ngOnChanges(changes) {
+    if(changes.items && changes.items.currentValue !== changes.items.previousValue) {
+      this.action$.next({ type: Action.Reset, payload: changes.items.currentValue })
     }
   }
 
-  moveUp(): void {
+  moveUp() {
     this.action$.next({ type: Action.MoveUp })
   }
 
-  moveDown(): void {
+  moveDown() {
     this.action$.next({ type: Action.MoveDown })
   }
 
-  submit(): void {
+  submit() { //考虑Input enter事件的第二种情况？ 以及Input不存在时的情况
     this.action$.next({ type: Action.Enter, payload: this.currIndex })
   }
 
@@ -194,12 +177,12 @@ export class MenuListComponent implements OnInit {
     }
   }
 
-  sideEffect(prevState, nextState, { type, payload }) {
+  sideEffect(prevState, currState, { type, payload }) {
     switch(type) {
       case Action.Enter:
-        this.enter.emit(nextState[payload])
+        this.enter.emit(currState[payload])
         setTimeout(() =>
-          this.action$.next({ type:Action.Reset, payload: this.items })
+          this.action$.next({ type: Action.Reset, payload: this.items })
         , 0)
         return
       case Action.Reset:
@@ -214,35 +197,35 @@ export class MenuListComponent implements OnInit {
         let newIndex: number = -1
         if (this.currIndex !== -1) {
           let item = prevState[this.currIndex]
-          newIndex = findIndex(nextState, i => i === item)
+          newIndex = findIndex(currState, i => i === item)
         }
         this.currIndex = newIndex
         this.scroll.scrollToIndex(newIndex)
         return
       case Action.MoveDown:
-        if (!nextState) {
+        if (!currState.length) {
           return
         }
-        if (this.currIndex !== nextState.length - 1) {
+        if (this.currIndex !== currState.length - 1) {
           this.currIndex += 1
         } else {
           this.currIndex = 0
         }
         break
       case Action.MoveUp:
-        if (!nextState) {
+        if (!currState.length) {
           return
         }
         if (this.currIndex > 0) {
           this.currIndex -= 1
         } else {
-          this.currIndex = nextState.length - 1
+          this.currIndex = currState.length - 1
         }
         break
     }
+
     if (this.scroll) {
       this.scroll.scrollToIndex(this.currIndex)
     }
   }
-
 }

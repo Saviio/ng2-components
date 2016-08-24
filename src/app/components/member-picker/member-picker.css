@@ -62,5 +62,5 @@ ul,ol{
 }
 
 li.selected{
-  color:#008fff;
+  color:#008fff !important;
 }
