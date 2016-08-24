@@ -1,6 +1,6 @@
 <div class="member-picker-view">
   <div class="member-picker-input">
-    <input 
+    <input
       [placeholder] = "'查找成员'"
       name='member-picker'
       autofocus
@@ -9,9 +9,9 @@
     />
   </div>
   <tb-menu-list
-    [items]="items" 
-    [inputElem]="input" 
-    [predicate]="filter" 
+    [items]="items"
+    [inputElem]="input"
+    [predicate]="filter"
     [highlight]="activeClass"
     (enter)="onEnter($event)"
   >
