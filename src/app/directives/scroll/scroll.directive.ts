@@ -42,20 +42,22 @@ export class ScrollDirective {
   }
 
   public scrollToIndex(index) {
+    let child = this.el.children[index]
+    if(child && this.highlight){
+      child.classList.add(this.highlight)
+      siblings(child).forEach(item => item.classList.remove(this.highlight))
+    }
+
     if (!this.hasScroll()) {
       return
     }
     if (!isNumber(index) || index < 0 || index >= this.el.children.length) {
       return
     }
-    let child = this.el.children[index]
+    
     let childHeight = child.getBoundingClientRect().height
     let parentHeight = this.el.getBoundingClientRect().height
     let to = childHeight * (index + 1) + childHeight / 2 - parentHeight
-    if(this.highlight){
-      child.classList.add(this.highlight)
-      siblings(child).forEach(item => item.classList.remove(this.highlight))
-    }
 
     this.scrollTo(this.el, to, 200)
   }

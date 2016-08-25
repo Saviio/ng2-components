@@ -37,7 +37,8 @@ enum Action {
   Filter,
   Enter,
   MoveUp,
-  MoveDown
+  MoveDown,
+  InputSubmit
 }
 
 const reCharacter = /^$|^([a-zA-Z0-9\u4e00-\u9fa5_ -]+)$/
@@ -51,11 +52,13 @@ const reCharacter = /^$|^([a-zA-Z0-9\u4e00-\u9fa5_ -]+)$/
 export class MenuListComponent implements OnInit {
 
   @Input() items: any[] = []
-  @Input() inputElem: any
+  @Input() inputElem: HTMLInputElement
   @Input() predicate = (v: any, qs?: String) => true
   @Input() initialQuery: string
   @Input() highlight: string = ''
+  @Input() autoMatch: boolean = true
   @Output() enter: EventEmitter<any> = new EventEmitter<any>()
+  @Output() inputSubmit: EventEmitter<any> = new EventEmitter<any>()
 
   @ViewChild(ScrollDirective) scroll: ScrollDirective
   @ContentChild(TemplateRef) template: any
@@ -67,8 +70,8 @@ export class MenuListComponent implements OnInit {
   private state$: Observable<any>
 
   ngOnInit() {
-    this.keyboardSubscription = Observable.fromEvent(document, 'keyup')
-      .do((event:KeyboardEvent) => event.stopPropagation())
+    this.keyboardSubscription = Observable.fromEvent(document, 'keydown')
+      .do((event:KeyboardEvent) => event.preventDefault())
       .map((event:KeyboardEvent) => event.keyCode)
       .do(keyCode => {
         switch (keyCode) {
@@ -90,7 +93,7 @@ export class MenuListComponent implements OnInit {
       })
       .subscribe()
 
-      this.inputSubscription = Observable.fromEvent(<HTMLInputElement>this.inputElem, 'input')
+      this.inputSubscription = Observable.fromEvent(this.inputElem, 'input')
         .filter((event: KeyboardEvent) => reCharacter.test((<HTMLInputElement>event.target).value))
         .map((event: KeyboardEvent) => (<HTMLInputElement>event.target).value)
         .debounceTime(100)
@@ -103,24 +106,17 @@ export class MenuListComponent implements OnInit {
           this.action$.next(action)
         })
         .subscribe()
-
-      /*console.log(this.ul.nativeElement)
-      Observable.fromEvent(this.ul.nativeElement.firstChild, 'keyup')
-        .do((event: KeyboardEvent) => {
-          console.log(1)
-          switch(event.keyCode){
-            case Action.MoveUp:
-            case Action.MoveDown:
-              event.preventDefault()
-              event.stopPropagation()
-              break
-          }
-        })
-        .subscribe()*/
-
+      
+      let initialState = this.items
+      
+      if(this.initialQuery !== undefined && this.initialQuery !== '') {
+        let act = { type:Action.Filter, payload: this.initialQuery }
+        initialState = this.reducer(initialState, act)
+        this.sideEffect(this.items, initialState, act)
+      }
 
       this.state$ = this.action$
-        .startWith(this.items)
+        .startWith(initialState)
         .scan((prevState, action) => {
           let nextState = this.reducer(prevState, action)
           this.sideEffect(prevState, nextState, action)
@@ -128,19 +124,6 @@ export class MenuListComponent implements OnInit {
         })
         .publishReplay(1)
         .refCount()
-
-      /*
-        options state ::=
-              高亮状态 这个用Scroll Directive 通过DOM操作来完成？
-              鼠标悬浮 (由外部控制）
-              选中状态 (由外部控制)
-      */
-
-      if(this.initialQuery !== undefined){
-        setTimeout(() => 
-          this.action$.next({ type:Action.Filter, payload: this.initialQuery })
-        , 0)
-      }
   }
 
   ngOnDestory() {
@@ -162,8 +145,15 @@ export class MenuListComponent implements OnInit {
     this.action$.next({ type: Action.MoveDown })
   }
 
-  submit() { //考虑Input enter事件的第二种情况？ 以及Input不存在时的情况
-    this.action$.next({ type: Action.Enter, payload: this.currIndex })
+  submit() {
+    if(this.currIndex === -1) { // 列表选项中不存在任何匹配的项，则界定为响应input submit事件
+      if(!this.inputElem) {
+        throw new Error(`There's no HTMLInputElement was binded.`)
+      }
+      this.action$.next({ type: Action.InputSubmit, payload: this.inputElem.value.trim() })
+    } else {
+      this.action$.next({ type: Action.Enter, payload: this.currIndex })
+    }
   }
 
   reducer(state, { type, payload }) {
@@ -181,9 +171,10 @@ export class MenuListComponent implements OnInit {
     switch(type) {
       case Action.Enter:
         this.enter.emit(currState[payload])
-        setTimeout(() =>
-          this.action$.next({ type: Action.Reset, payload: this.items })
-        , 0)
+        this.reset()
+        return 
+      case Action.InputSubmit:
+        this.inputSubmit.emit(payload)
         return
       case Action.Reset:
         this.currIndex = -1
@@ -191,6 +182,8 @@ export class MenuListComponent implements OnInit {
         this.scroll.clearHighlight()
         if (this.inputElem) {
           this.inputElem.value = ''
+          let event = new Event('input', { bubbles:true, cancelable:false })
+          this.inputElem.dispatchEvent(event)
         }
         return
       case Action.Filter:
@@ -199,8 +192,14 @@ export class MenuListComponent implements OnInit {
           let item = prevState[this.currIndex]
           newIndex = findIndex(currState, i => i === item)
         }
-        this.currIndex = newIndex
-        this.scroll.scrollToIndex(newIndex)
+        if(this.autoMatch) {
+          this.currIndex = (currState.length >= 1 && newIndex === -1) ? 0 : newIndex
+        } else {
+          this.currIndex = newIndex
+        }
+        setTimeout(() => //等待Angular 完成DOM的变更
+          this.scroll.scrollToIndex(this.currIndex)
+        , 0)
         return
       case Action.MoveDown:
         if (!currState.length) {
@@ -222,10 +221,18 @@ export class MenuListComponent implements OnInit {
           this.currIndex = currState.length - 1
         }
         break
+      default:
+        return
     }
 
     if (this.scroll) {
       this.scroll.scrollToIndex(this.currIndex)
     }
+  }
+
+  reset() {
+    setTimeout(() =>
+      this.action$.next({ type: Action.Reset, payload: this.items })
+    , 0)
   }
 }

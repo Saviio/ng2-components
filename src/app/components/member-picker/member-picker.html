@@ -1,24 +1,29 @@
-<div class="member-picker-view">
+<div class="member-picker-view" id="view">
   <div class="member-picker-input">
     <input
       [placeholder] = "'查找成员'"
       name='member-picker'
       autofocus
       autocomplete="off"
+      [(ngModel)] = "member"
       #input
     />
+    <button [disabled]="!isValid(member)" (click)="onInputSubmit(member)">TEST</button>
   </div>
   <tb-menu-list
     [items]="items"
     [inputElem]="input"
     [predicate]="filter"
     [highlight]="activeClass"
+    [initialQuery]="member"
     (enter)="onEnter($event)"
+    (inputSubmit)="onInputSubmit($event)"
+    id="list"
   >
-    <template let-item="$implicit" let-i="index">
-        <li class="option" (click)="toggle(item)" [class.selected]="isSelected(item)">
-            <a>{{item?.name}}</a>
-        </li>
+    <template let-member="$implicit" let-i="index">
+      <li class="option" (click)="toggle(member)" [class.selected]="isSelected(member)">
+          <a>{{member?.name}}</a>
+      </li>
     </template>
   </tb-menu-list>
 </div>

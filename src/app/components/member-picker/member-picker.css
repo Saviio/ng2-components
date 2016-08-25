@@ -64,3 +64,7 @@ ul,ol{
 li.selected{
   color:#008fff !important;
 }
+
+button[disabled]{
+  background: grey;
+}

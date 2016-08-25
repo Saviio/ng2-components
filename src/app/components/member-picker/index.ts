@@ -17,6 +17,13 @@ export class MemberPickerComponent {
   public activeClass: string = 'is-active'
   private selected: Set<any> = new Set<any>()
 
+  public member: string = ''
+  public validator: RegExp = /^\w{0,5}$/
+
+  public isValid(item) {
+    return this.validator.test(item)
+  }
+
   filter(item, qs): boolean {
     return item.name.indexOf(qs) > -1
   }
@@ -25,7 +32,7 @@ export class MemberPickerComponent {
     return this.selected.has(item)
   }
 
-  toggle(item){
+  toggle(item) {
     if (!this.isSelected(item)) {
       this.selected.add(item)
       this.onSelect.emit(item)
@@ -35,7 +42,13 @@ export class MemberPickerComponent {
     }
   }
 
-  onEnter(item): void {
+  onEnter(item):void {
+    console.log(item)
     this.toggle(item)
+  }
+
+  onInputSubmit(item):void {
+    console.log(item)
+    this.menuList.reset()
   }
 }
