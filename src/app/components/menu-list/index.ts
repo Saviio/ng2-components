@@ -53,7 +53,7 @@ export class MenuListComponent implements OnInit {
 
   @Input() items: any[] = []
   @Input() inputElem: HTMLInputElement
-  @Input() predicate = (v: any, qs?: String) => true
+  @Input() predicate = (item: any, qs?: String) => true
   @Input() initialQuery: string
   @Input() highlight: string = ''
   @Input() autoMatch: boolean = true
@@ -76,15 +76,12 @@ export class MenuListComponent implements OnInit {
       .do(keyCode => {
         switch (keyCode) {
           case KeyboardOperation.Enter:
-            console.log('ENTER')
             this.submit()
             break
           case KeyboardOperation.Up:
-            console.log('UP', this.currIndex)
             this.moveUp()
             break
           case KeyboardOperation.Down:
-            console.log('DOWN', this.currIndex)
             this.moveDown()
             break
           default:

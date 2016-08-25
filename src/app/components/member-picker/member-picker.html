@@ -1,4 +1,4 @@
-<div class="member-picker-view" id="view">
+<div class="member-picker-view">
   <div class="member-picker-input">
     <input
       [placeholder] = "'查找成员'"
@@ -18,7 +18,6 @@
     [initialQuery]="member"
     (enter)="onEnter($event)"
     (inputSubmit)="onInputSubmit($event)"
-    id="list"
   >
     <template let-member="$implicit" let-i="index">
       <li class="option" (click)="toggle(member)" [class.selected]="isSelected(member)">
