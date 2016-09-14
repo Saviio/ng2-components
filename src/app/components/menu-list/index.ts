@@ -27,9 +27,9 @@ import 'rxjs/add/operator/startWith'
 import 'rxjs/add/operator/debounceTime'
 
 enum KeyboardOperation {
-  Enter = 13,
   Up = 38,
-  Down = 40
+  Down = 40,
+  Enter = 13
 }
 
 enum Action {
@@ -143,7 +143,7 @@ export class MenuListComponent implements OnInit {
   }
 
   submit() {
-    if(this.currIndex === -1) { // 列表选项中不存在任何匹配的项，则界定为响应input submit事件
+    if(this.currIndex === -1) { // 列表选项中不存在任何匹配的项，即：currIndex = -1 的情况下，则界定为响应input submit事件
       if(!this.inputElem) {
         throw new Error(`There's no HTMLInputElement was binded.`)
       }
